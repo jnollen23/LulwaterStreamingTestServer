@@ -1,0 +1,10 @@
+node_modules/
+cdk.out/
+frontend/dist/
+keys/
+*.log
+.env
+layers/ffmpeg/
+media-staging/
+reports/
+.claude/settings.local.json

@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lullwater Round 3</title>
+<style>
+/* Tokens copied from frontend/src/styles.css so the mockup matches the real site. */
+:root {
+  --bg: #f4f2ec; --panel: #ffffff; --panel-2: #f1efe8; --text: #1d1d1b; --muted: #5f5e5a; --faint: #8a8984;
+  --line: #dcd9cf; --accent: #0f6e56; --accent-bg: #e1f5ee; --on-accent: #ffffff; --cover: #085041; --cover-ink: #9fe1cb;
+  --warn: #8a4b06; --warn-bg: #faeeda; --error: #a32d2d; --radius: 10px;
+  --page: #e7e4db; --note: #fff8e1; --note-ink: #5a4500; --new: #c2410c;
+  color-scheme: light; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-size: 17px;
+}
+:root[data-theme="dark"] {
+  --bg: #000000; --panel: #050308; --panel-2: #0e0816; --text: #f5f0ff; --muted: #c4b5e0; --faint: #8e7fae;
+  --line: #2e1d4a; --accent: #b45cff; --accent-bg: #1f0838; --on-accent: #12001f; --cover: #2a0a52; --cover-ink: #d9b8ff;
+  --glow: 180, 92, 255; --warn: #fac775; --warn-bg: #412402; --error: #f09595;
+  --page: #0b0b0f; --note: #1d1a10; --note-ink: #f3dc9a; --new: #fb923c;
+  color-scheme: dark;
+}
+:root[data-theme="dark"] :is(.round-btn, .primary-btn) {
+  background: linear-gradient(180deg, #d4a3ff 0%, #b45cff 50%, #8a2be2 100%);
+  box-shadow: 0 0 18px rgba(var(--glow), 0.6), inset 0 1px 0 rgba(255,255,255,0.45);
+}
+:root[data-theme="dark"] :is(.genre-btn, .small-btn, .theme-btn, .back-btn, .search-box, .np-bar, .ctl.play, .share-btn, .next-btn, .menu) {
+  border-color: rgba(var(--glow), 0.55);
+  box-shadow: 0 0 10px rgba(var(--glow), 0.22), inset 0 0 14px rgba(var(--glow), 0.08);
+}
+:root[data-theme="dark"] .bottom-bar .on { text-shadow: 0 0 10px rgba(var(--glow), 0.8); }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--text); }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.ellipsis { display: block; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+/* ---------- Page chrome ---------- */
+.top { max-width: 1500px; margin: 0 auto; padding: 20px 16px 4px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.top h1 { margin: 0; font-size: 1.3rem; }
+.top p { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; }
+.mode { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 8px 16px; font-size: 0.9rem; }
+.grid { max-width: 1500px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 28px 20px; justify-items: center; }
+.cell { width: 100%; max-width: 360px; }
+.cell h2 { font-size: 0.95rem; margin: 0 0 8px; }
+.notes { margin: 10px 0 0; padding: 10px 12px 10px 30px; background: var(--note); color: var(--note-ink); border-radius: 10px; font-size: 0.8rem; line-height: 1.45; }
+.notes li + li { margin-top: 3px; }
+.new { outline: 2px dashed var(--new); outline-offset: 2px; }
+
+/* ---------- Phone frame + app replica ---------- */
+.phone { width: 100%; height: 720px; border-radius: 28px; border: 8px solid #222; overflow: hidden; background: var(--panel); position: relative; display: flex; flex-direction: column; font-size: 16px; }
+.search-row { display: flex; gap: 8px; padding: 12px 12px 8px; }
+.search-box { flex: 1; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-2); color: var(--muted); font-size: 0.9rem; }
+.theme-btn { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-2); color: var(--muted); }
+.back-btn { display: flex; align-items: center; gap: 4px; height: 44px; padding: 0 14px 0 6px; margin-right: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-2); }
+.main { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
+.bottom-bar { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--line); }
+.bottom-bar > * { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0 10px; font-size: 0.75rem; color: var(--muted); }
+.bottom-bar > * + * { border-left: 1px solid var(--line); }
+.bottom-bar .on { color: var(--accent); background: var(--accent-bg); }
+
+/* Home */
+.fixed-part { padding: 0 12px; }
+.np-bar { display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 12px; min-height: 56px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-2); color: var(--muted); }
+.np-text { flex: 1; min-width: 0; color: var(--text); font-size: 0.92rem; }
+.round-btn { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); }
+.free-line { margin-top: 8px; display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--muted); }
+.free-line b { color: var(--accent); font-weight: 600; }
+.genre-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+.genre-btn { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; border: 1px solid var(--line); border-radius: var(--radius); font-size: 0.82rem; }
+.genre-btn.on { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+.list-head { margin: 12px 0 6px; font-size: 0.8rem; color: var(--muted); }
+.song-list { flex: 1; min-height: 0; overflow: hidden; margin: 0 12px 10px; border: 1px solid var(--line); border-radius: var(--radius); position: relative; }
+.song-row { display: flex; align-items: center; gap: 10px; padding: 9px 4px 9px 12px; border-bottom: 1px solid var(--line); }
+.song-row.active .title { color: var(--accent); }
+.song-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; font-size: 0.92rem; }
+.song-meta .sub { font-size: 0.8rem; color: var(--muted); }
+.song-art { flex: none; width: 38px; height: 38px; border-radius: 6px; display: grid; place-items: center; background: var(--cover); color: var(--cover-ink); }
+.dur { flex: none; font-size: 0.76rem; color: var(--faint); font-variant-numeric: tabular-nums; }
+.dots { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; color: var(--muted); }
+.dots.open { background: var(--accent-bg); color: var(--accent); }
+.menu { position: absolute; right: 10px; top: 96px; z-index: 3; width: 236px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.2); overflow: hidden; }
+.menu button { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 16px; font-size: 0.95rem; text-align: left; }
+.menu button + button { border-top: 1px solid var(--line); }
+.menu svg { color: var(--accent); }
+.menu small { margin-left: auto; color: var(--faint); font-size: 0.72rem; }
+
+/* Now playing */
+.np-page { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 2px 12px 10px; }
+.cover-band { display: flex; justify-content: center; background: var(--panel-2); margin: 0 -12px; padding: 10px 0; }
+.cover { height: 250px; aspect-ratio: 1 / 1; border-radius: 16px; display: grid; place-items: center; color: var(--cover-ink);
+  background: radial-gradient(circle at 30% 25%, #2aa184 0, var(--cover) 60%); box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+:root[data-theme="dark"] .cover { background: radial-gradient(circle at 30% 25%, #6b2fb3 0, var(--cover) 60%); }
+.np-head { display: flex; align-items: center; gap: 6px; margin-top: 10px; }
+.np-name { flex: 1; min-width: 0; text-align: center; }
+.np-title { font-size: 1.05rem; font-weight: 600; line-height: 1.3; }
+.np-artist { color: var(--muted); font-size: 0.9rem; }
+.ctl { flex: none; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); }
+.ctl.on { color: var(--accent); background: var(--accent-bg); }
+.ctl.like { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1px; font-size: 0.68rem; line-height: 1; }
+.ctl.play { width: 62px; height: 62px; border: 2px solid var(--accent); background: var(--accent-bg); color: var(--accent); }
+.share-btn { flex: none; width: 60px; min-height: 48px; padding: 4px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-2);
+  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.5px; line-height: 1.2; color: var(--accent); }
+.progress { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 0.76rem; color: var(--faint); font-variant-numeric: tabular-nums; }
+.bar { flex: 1; height: 6px; border-radius: 3px; background: var(--line); position: relative; }
+.bar::before { content: ""; position: absolute; inset: 0 62% 0 0; border-radius: 3px; background: var(--accent); }
+.bar::after { content: ""; position: absolute; left: 38%; top: 50%; width: 18px; height: 18px; margin: -9px; border-radius: 50%; background: var(--accent); }
+.transport { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 6px; }
+.mode-line { text-align: center; font-size: 0.72rem; color: var(--faint); }
+.next-btn { margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel-2); }
+.next-btn b { font-weight: 600; }
+.next-btn span { color: var(--muted); font-size: 0.85rem; }
+
+/* Queue */
+.queue-close { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0 10px; border-bottom: 1px solid var(--line); }
+.grabber { width: 40px; height: 5px; border-radius: 3px; background: var(--line); }
+.queue-close b { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 1rem; color: var(--accent); }
+.queue-close span { font-size: 0.78rem; color: var(--muted); }
+.queue-row { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 4px; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+.queue-row .ellipsis { flex: 1; }
+.queue-row.current { padding: 6px 4px; background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+
+/* Dialogs + pages */
+.overlay { position: absolute; inset: 0; z-index: 5; background: rgba(0,0,0,.55); display: flex; align-items: center; padding: 12px; }
+.dialog { width: 100%; max-height: 100%; background: var(--panel); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.dialog-head { display: flex; align-items: center; justify-content: space-between; font-weight: 600; }
+.icon-btn { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; color: var(--muted); }
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; font-size: 0.82rem; }
+.tabs > * { padding: 9px 0; text-align: center; }
+.tabs > * + * { border-left: 1px solid var(--line); }
+.tabs .on { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+.lyrics { font-size: 0.9rem; line-height: 1.6; color: var(--text); max-height: 250px; overflow: hidden; -webkit-mask-image: linear-gradient(#000 80%, transparent); mask-image: linear-gradient(#000 80%, transparent); }
+.info-block { font-size: 0.8rem; line-height: 1.45; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
+.info-block b { color: var(--text); display: block; font-size: 0.82rem; }
+.primary-btn { height: 48px; border-radius: var(--radius); background: var(--accent); color: var(--on-accent); font-weight: 600; width: 100%; }
+.outline-btn { height: 46px; border-radius: var(--radius); border: 1px solid var(--accent); color: var(--accent); font-weight: 600; width: 100%; }
+.page { flex: 1; min-height: 0; overflow: hidden; padding: 4px 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+.page h3 { margin: 4px 0 0; font-size: 1.15rem; }
+.card { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+.card .row { display: flex; align-items: center; gap: 10px; }
+.card .row .grow { flex: 1; min-width: 0; }
+.price { font-weight: 600; color: var(--accent); font-size: 0.9rem; }
+.muted { color: var(--muted); font-size: 0.82rem; line-height: 1.45; }
+.donate { margin-top: auto; background: var(--accent-bg); border-color: var(--accent); }
+.brand-banner { border-radius: var(--radius); background: var(--cover); color: #e1f5ee; padding: 16px; text-align: center; letter-spacing: 4px; font-weight: 600; }
+.check { display: flex; gap: 8px; font-size: 0.85rem; }
+.check svg { color: var(--accent); flex: none; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div>
+    <h1>Lullwater Studios — UI round 3 (proposed)</h1>
+    <p>Mockup only, not wired to the site. Dashed orange outlines mark what changed from the current build.</p>
+  </div>
+  <button class="mode" id="mode">Switch to dark mode</button>
+</div>
+
+<div class="grid">
+
+  <!-- 1. HOME -->
+  <section class="cell">
+    <h2>1 · Home, with a song's ⋯ menu open</h2>
+    <div class="phone">
+      <div class="search-row">
+        <div class="search-box"><i data-i="search"></i>Search songs or artists</div>
+        <div class="theme-btn"><i data-i="moon"></i></div>
+      </div>
+      <div class="main">
+        <div class="fixed-part">
+          <div class="np-bar"><i data-i="music"></i><span class="np-text ellipsis">Still Waters - The Lullwater Choir</span><span class="round-btn"><i data-i="pause"></i></span></div>
+          <div class="free-line new"><i data-i="clock" data-s="16"></i><span>Free today: <b>42 min left</b> · resets midnight ET</span></div>
+          <div class="genre-grid">
+            <span class="genre-btn">Hymns</span><span class="genre-btn on">Gospel</span><span class="genre-btn">Choral</span>
+            <span class="genre-btn">Piano</span><span class="genre-btn">Bluegrass</span><span class="genre-btn"><i data-i="filter" data-s="18"></i>Show all</span>
+          </div>
+          <div class="list-head">Genre: Gospel · 24</div>
+        </div>
+        <div class="song-list">
+          <div class="song-row active"><span class="song-art"><i data-i="music" data-s="18"></i></span><span class="song-meta"><span class="ellipsis title">Still Waters</span><span class="ellipsis sub">The Lullwater Choir</span></span><span class="dur">4:12</span><span class="dots new"><i data-i="dots"></i></span></div>
+          <div class="song-row"><span class="song-art"><i data-i="music" data-s="18"></i></span><span class="song-meta"><span class="ellipsis title">Morning Has Broken</span><span class="ellipsis sub">Ruth Calloway</span></span><span class="dur">3:05</span><span class="dots open"><i data-i="dots"></i></span></div>
+          <div class="song-row"><span class="song-art"><i data-i="music" data-s="18"></i></span><span class="song-meta"><span class="ellipsis title">Blessed Assurance</span><span class="ellipsis sub">Lullwater Strings</span></span><span class="dur">3:48</span><span class="dots"><i data-i="dots"></i></span></div>
+          <div class="song-row"><span class="song-art"><i data-i="music" data-s="18"></i></span><span class="song-meta"><span class="ellipsis title">In the Garden</span><span class="ellipsis sub">Ruth Calloway</span></span><span class="dur">4:40</span><span class="dots"><i data-i="dots"></i></span></div>
+          <div class="song-row"><span class="song-art"><i data-i="music" data-s="18"></i></span><span class="song-meta"><span class="ellipsis title">Shall We Gather at the River</span><span class="ellipsis sub">The Lullwater Choir</span></span><span class="dur">3:22</span><span class="dots"><i data-i="dots"></i></span></div>
+          <div class="song-row"><span class="song-art"><i data-i="music" data-s="18"></i></span><span class="song-meta"><span class="ellipsis title">It Is Well</span><span class="ellipsis sub">Lullwater Strings</span></span><span class="dur">5:01</span><span class="dots"><i data-i="dots"></i></span></div>
+          <div class="menu new">
+            <button><i data-i="play" data-s="20"></i>Play</button>
+            <button><i data-i="listplus" data-s="20"></i>Add to playlist<small>account</small></button>
+            <button><i data-i="bag" data-s="20"></i>Buy</button>
+          </div>
+        </div>
+      </div>
+      <nav class="bottom-bar new">
+        <span class="on"><i data-i="home"></i>Home</span><span><i data-i="info"></i>About</span><span><i data-i="bag"></i>Buy</span><span><i data-i="user"></i>Account</span>
+      </nav>
+    </div>
+    <ul class="notes">
+      <li>Each song gets a ⋯ button: <b>Play / Add to playlist / Buy</b>. Add to playlist asks the listener to sign in.</li>
+      <li>Bottom bar: Donate + Shop → <b>Buy</b>; <b>Account</b> added.</li>
+      <li>Free-hour line is a proposal so free listeners aren't surprised when time runs out. Subscribers don't see it.</li>
+    </ul>
+  </section>
+
+  <!-- 2. NOW PLAYING -->
+  <section class="cell">
+    <h2>2 · Now playing</h2>
+    <div class="phone">
+      <div class="search-row">
+        <span class="back-btn"><i data-i="back"></i>Back</span>
+        <div class="theme-btn"><i data-i="moon"></i></div>
+      </div>
+      <div class="main">
+        <div class="np-page">
+          <div class="cover-band new"><div class="cover"><i data-i="music" data-s="64"></i></div></div>
+          <div class="np-head">
+            <span class="ctl like new"><i data-i="heart" data-s="22"></i><span>128</span></span>
+            <div class="np-name"><div class="np-title ellipsis">Still Waters</div><div class="np-artist ellipsis">The Lullwater Choir</div></div>
+            <span class="share-btn new">SHARE SONG</span>
+          </div>
+          <div class="progress"><span>1:36</span><span class="bar"></span><span>4:12</span></div>
+          <div class="transport">
+            <span class="ctl new"><i data-i="repeat"></i></span>
+            <span class="ctl"><i data-i="prev"></i></span>
+            <span class="ctl play new"><i data-i="pause"></i></span>
+            <span class="ctl"><i data-i="next"></i></span>
+            <span class="ctl on new"><i data-i="shuffle"></i></span>
+          </div>
+          <div class="mode-line">Loop off · Shuffle on</div>
+          <div class="next-btn new"><b>Next songs</b><span>— tap to see</span><i data-i="up" data-s="18"></i></div>
+        </div>
+      </div>
+      <nav class="bottom-bar">
+        <span class="on"><i data-i="home"></i>Home</span><span><i data-i="info"></i>About</span><span><i data-i="bag"></i>Buy</span><span><i data-i="user"></i>Account</span>
+      </nav>
+    </div>
+    <ul class="notes">
+      <li>Album art is always a full <b>square with rounded corners</b>, never cropped. Plain bars fill the sides.</li>
+      <li><b>Favorite</b> and <b>SHARE SONG</b> sit beside the title. The arrow icon is gone.</li>
+      <li><b>Loop</b> and <b>Shuffle</b> moved down next to the play controls.</li>
+      <li>Play is <b>outlined</b> like the Back button instead of solid.</li>
+      <li>Upcoming song names removed. It's one <b>Next songs — tap to see</b> button.</li>
+    </ul>
+  </section>
+
+  <!-- 3. QUEUE -->
+  <section class="cell">
+    <h2>3 · After tapping "Next songs"</h2>
+    <div class="phone">
+      <div class="search-row">
+        <span class="back-btn"><i data-i="back"></i>Back</span>
+        <div class="theme-btn"><i data-i="moon"></i></div>
+      </div>
+      <div class="main">
+        <div class="np-page">
+          <div class="queue-close new"><span class="grabber"></span><b>Tap to go back <i data-i="down" data-s="18"></i></b><span>to the song that's playing</span></div>
+          <div class="queue-row"><span class="song-art"><i data-i="music" data-s="18"></i></span><span class="ellipsis">Morning Has Broken - Ruth Calloway</span><span class="dur">3:05</span></div>
+          <div class="queue-row current"><span class="song-art"><i data-i="music" data-s="18"></i></span><span class="ellipsis">Still Waters - The Lullwater Choir</span><span class="dur">1:36 / 4:12</span></div>
+          <div class="queue-row"><span class="song-art"><i data-i="music" data-s="18"></i></span><span class="ellipsis">Blessed Assurance - Lullwater Strings</span><span class="dur">3:48</span></div>
+          <div class="queue-row"><span class="song-art"><i data-i="music" data-s="18"></i></span><span class="ellipsis">In the Garden - Ruth Calloway</span><span class="dur">4:40</span></div>
+          <div class="queue-row"><span class="song-art"><i data-i="music" data-s="18"></i></span><span class="ellipsis">Shall We Gather at the River - The Lullwater Choir</span><span class="dur">3:22</span></div>
+          <div class="queue-row"><span class="song-art"><i data-i="music" data-s="18"></i></span><span class="ellipsis">It Is Well - Lullwater Strings</span><span class="dur">5:01</span></div>
+          <div class="queue-row"><span class="song-art"><i data-i="music" data-s="18"></i></span><span class="ellipsis">Amazing Grace - Ruth Calloway</span><span class="dur">4:18</span></div>
+          <div class="queue-row"><span class="song-art"><i data-i="music" data-s="18"></i></span><span class="ellipsis">Be Thou My Vision - Lullwater Strings</span><span class="dur">3:56</span></div>
+        </div>
+      </div>
+      <nav class="bottom-bar">
+        <span class="on"><i data-i="home"></i>Home</span><span><i data-i="info"></i>About</span><span><i data-i="bag"></i>Buy</span><span><i data-i="user"></i>Account</span>
+      </nav>
+    </div>
+    <ul class="notes">
+      <li>Big <b>Tap to go back</b> text at the top replaces the small "Playlist ⌄" label.</li>
+      <li>The song that's playing is highlighted. Tap any other song to play it.</li>
+    </ul>
+  </section>
+
+  <!-- 4. ABOUT POPUP -->
+  <section class="cell">
+    <h2>4 · About, while a song is playing</h2>
+    <div class="phone">
+      <div class="search-row">
+        <span class="back-btn"><i data-i="back"></i>Back</span>
+        <div class="theme-btn"><i data-i="moon"></i></div>
+      </div>
+      <div class="main">
+        <div class="np-page" style="opacity:.6">
+          <div class="cover-band"><div class="cover"><i data-i="music" data-s="64"></i></div></div>
+        </div>
+        <div class="overlay new">
+          <div class="dialog">
+            <div class="dialog-head"><span class="ellipsis">About this song</span><span class="icon-btn"><i data-i="close"></i></span></div>
+            <div><div class="np-title">Still Waters</div><div class="np-artist">The Lullwater Choir</div></div>
+            <div class="lyrics"><b>Lyrics</b><br>Lead me down by the still waters,<br>where the willows bend and sway,<br>let the quiet river carry<br>every worry of the day.<br><br>Still waters, still waters,<br>I will rest beside your shore,<br>still waters, still waters,<br>peace I've never known before.<br><br>(sample lyrics for the mockup)</div>
+            <div class="info-block"><b>Copyright</b>© 2026 Lullwater Studios. All rights reserved.</div>
+            <div class="info-block"><b>AI information</b>Vocals and instruments performed by people. AI was used for mastering only.</div>
+            <button class="primary-btn">Close</button>
+          </div>
+        </div>
+      </div>
+      <nav class="bottom-bar">
+        <span><i data-i="home"></i>Home</span><span class="on"><i data-i="info"></i>About</span><span><i data-i="bag"></i>Buy</span><span><i data-i="user"></i>Account</span>
+      </nav>
+    </div>
+    <ul class="notes">
+      <li>On the Now playing screen, <b>About</b> opens this popup instead of the site's About page.</li>
+      <li>Shows <b>lyrics, copyright and AI information</b> for the song, in one scrolling popup. There are no tabs to find.</li>
+      <li>Each song needs these three fields entered. FLAC files won't reliably carry them.</li>
+    </ul>
+  </section>
+
+  <!-- 5. BUY -->
+  <section class="cell">
+    <h2>5 · Buy (Donate + Shop merged)</h2>
+    <div class="phone">
+      <div class="search-row">
+        <div class="search-box"><i data-i="search"></i>Search songs or artists</div>
+        <div class="theme-btn"><i data-i="moon"></i></div>
+      </div>
+      <div class="main">
+        <div class="page">
+          <h3>Buy</h3>
+          <div class="card">
+            <div class="row"><span class="song-art"><i data-i="music" data-s="18"></i></span><span class="grow"><b class="ellipsis">Still Waters</b><span class="muted">Song download</span></span><span class="price">$—</span></div>
+          </div>
+          <div class="card">
+            <div class="row"><span class="song-art"><i data-i="layers" data-s="18"></i></span><span class="grow"><b class="ellipsis">Multitracks</b><span class="muted">Stems for your own production</span></span><span class="price">$—</span></div>
+          </div>
+          <div class="card">
+            <div class="row"><span class="song-art"><i data-i="bag" data-s="18"></i></span><span class="grow"><b class="ellipsis">Merchandise</b><span class="muted">Coming soon</span></span></div>
+          </div>
+          <div class="card donate new">
+            <div class="row"><i data-i="heart" data-s="22"></i><b class="grow">Support Lullwater Studios</b></div>
+            <span class="muted">Donations keep the music free for everyone.</span>
+            <button class="primary-btn">Donate</button>
+          </div>
+        </div>
+      </div>
+      <nav class="bottom-bar">
+        <span><i data-i="home"></i>Home</span><span><i data-i="info"></i>About</span><span class="on"><i data-i="bag"></i>Buy</span><span><i data-i="user"></i>Account</span>
+      </nav>
+    </div>
+    <ul class="notes">
+      <li>The store with <b>Donate at the bottom</b>.</li>
+      <li>Items and prices are placeholders. The payment provider isn't chosen yet, and it won't be PayPal.</li>
+    </ul>
+  </section>
+
+  <!-- 6. ACCOUNT -->
+  <section class="cell">
+    <h2>6 · Account (not signed in)</h2>
+    <div class="phone">
+      <div class="search-row">
+        <div class="search-box"><i data-i="search"></i>Search songs or artists</div>
+        <div class="theme-btn"><i data-i="moon"></i></div>
+      </div>
+      <div class="main">
+        <div class="page">
+          <h3>Account</h3>
+          <div class="brand-banner">LULLWATER STUDIOS</div>
+          <div class="muted">Listening is free for 1 hour a day, no account needed.</div>
+          <div class="card new">
+            <b>Subscribe</b>
+            <span class="check"><i data-i="check" data-s="18"></i>Unlimited listening</span>
+            <span class="check"><i data-i="check" data-s="18"></i>Your own playlists</span>
+            <span class="check"><i data-i="check" data-s="18"></i>Save your favorites</span>
+            <span class="check"><i data-i="check" data-s="18"></i>Best sound quality, always</span>
+            <button class="primary-btn">Subscribe — $—/month</button>
+          </div>
+          <button class="outline-btn">Sign in</button>
+        </div>
+      </div>
+      <nav class="bottom-bar">
+        <span><i data-i="home"></i>Home</span><span><i data-i="info"></i>About</span><span><i data-i="bag"></i>Buy</span><span class="on"><i data-i="user"></i>Account</span>
+      </nav>
+    </div>
+    <ul class="notes">
+      <li>New tab. Accounts are only for subscribers, playlists, favorites and buying.</li>
+      <li>"Best sound quality, always" works because subscribers are never switched to low quality when the spending limit kicks in.</li>
+      <li>Price and plan details are placeholders.</li>
+    </ul>
+  </section>
+
+</div>
+
+<script>
+const P = {
+  search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  moon: '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>',
+  music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  play: '<polygon points="7 4 20 12 7 20 7 4" fill="currentColor"/>',
+  pause: '<rect x="6" y="4" width="4" height="16" fill="currentColor"/><rect x="14" y="4" width="4" height="16" fill="currentColor"/>',
+  prev: '<polygon points="19 20 9 12 19 4 19 20" fill="currentColor"/><line x1="5" y1="19" x2="5" y2="5"/>',
+  next: '<polygon points="5 4 15 12 5 20 5 4" fill="currentColor"/><line x1="19" y1="5" x2="19" y2="19"/>',
+  shuffle: '<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',
+  repeat: '<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
+  back: '<polyline points="15 18 9 12 15 6"/>',
+  up: '<polyline points="6 15 12 9 18 15"/>',
+  down: '<polyline points="6 9 12 15 18 9"/>',
+  home: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+  info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+  heart: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>',
+  bag: '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+  user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  filter: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
+  close: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  dots: '<circle cx="12" cy="5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="19" r="1.6" fill="currentColor"/>',
+  listplus: '<line x1="3" y1="6" x2="15" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="11" y2="18"/><line x1="18" y1="13" x2="18" y2="21"/><line x1="14" y1="17" x2="22" y2="17"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  layers: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
+};
+document.querySelectorAll('i[data-i]').forEach((el) => {
+  const s = el.dataset.s || 22;
+  el.outerHTML = `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[el.dataset.i]}</svg>`;
+});
+const btn = document.getElementById('mode');
+btn.onclick = () => {
+  const dark = document.documentElement.dataset.theme !== 'dark';
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  btn.textContent = dark ? 'Switch to light mode' : 'Switch to dark mode';
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "app": "npx tsx infra/app.ts",
+  "watch": {
+    "include": ["infra/**", "backend/**"]
+  }
+}

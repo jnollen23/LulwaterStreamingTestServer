@@ -1,0 +1,35 @@
+{
+  "name": "streaming-website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup-keys": "tsx scripts/setup-keys.ts",
+    "build:web": "npm --prefix frontend run build",
+    "typecheck": "tsc --noEmit",
+    "synth": "npm run build:web && cdk synth",
+    "deploy": "npm run build:web && cdk deploy",
+    "destroy": "cdk destroy",
+    "fetch-ffmpeg": "tsx scripts/fetch-ffmpeg.ts",
+    "royalty-report": "tsx scripts/royalty-report.ts",
+    "streaming-mode": "tsx scripts/streaming-mode.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cloudwatch": "^3.1163.0",
+    "@aws-sdk/client-dynamodb": "^3.1146.0",
+    "@aws-sdk/client-s3": "^3.1146.0",
+    "@aws-sdk/client-sns": "^3.1163.0",
+    "@aws-sdk/client-ssm": "^3.1146.0",
+    "@aws-sdk/lib-dynamodb": "^3.1146.0",
+    "aws-cdk-lib": "^2.272.0",
+    "constructs": "^10.8.1",
+    "music-metadata": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.164",
+    "@types/node": "^26.6.4",
+    "aws-cdk": "^2.1144.0",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

@@ -1,0 +1,2 @@
+# Keep LF line endings in the working copy (files are written with LF; stops Windows CRLF churn).
+* text=auto eol=lf
