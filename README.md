@@ -70,6 +70,18 @@ The first deploy takes about 5–10 minutes (CloudFront is slow to create). Late
 
 Title, artist, album, track number, year and cover art come from the FLAC tags. If a file has no title tag, the filename is used.
 
+### Making a tagged FLAC from a WAV
+
+`scripts/make-flac.py` turns a WAV plus song details into one tagged FLAC (lossless; needs [uv](https://docs.astral.sh/uv/), which fetches the Python libraries itself). Put each song in its own folder with one `.wav`, an `info.txt`, and optionally `lyrics.txt` and a `.jpg`/`.png` cover:
+
+```
+npm run make-flac -- --new "C:\Music\My Song"     # writes a blank info.txt to fill in
+npm run make-flac -- "C:\Music\My Song"           # makes "Artist - Title.flac" next to the WAV
+npm run make-flac -- "C:\Music" --out "%USERPROFILE%\Downloads\lullwater-flac"   # every song folder inside
+```
+
+Title, Artist and Genre are required. Several genres/artists/producers are separated with `;`. Besides the tags above it writes `PRODUCER` (used by the royalty report), `LYRICS`, `COPYRIGHT` and `AI_INFO` (for the song's About popup — **not read by the ingest Lambda yet**), and any other `Key: value` line as its own tag.
+
 **If a track never shows up:** open DynamoDB, then the `TracksTableName` table, and find the item. `status` will be `ERROR` with an `error` message. The Lambda logs are in CloudWatch (`/aws/lambda/StreamingWebsite-IngestFn…`); ffmpeg's last lines of output are included in the `error` message.
 
 ## Login hooks (not active)

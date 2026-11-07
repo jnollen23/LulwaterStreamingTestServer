@@ -11,7 +11,8 @@
     "destroy": "cdk destroy",
     "fetch-ffmpeg": "tsx scripts/fetch-ffmpeg.ts",
     "royalty-report": "tsx scripts/royalty-report.ts",
-    "streaming-mode": "tsx scripts/streaming-mode.ts"
+    "streaming-mode": "tsx scripts/streaming-mode.ts",
+    "make-flac": "uv run scripts/make-flac.py"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch": "^3.1163.0",
