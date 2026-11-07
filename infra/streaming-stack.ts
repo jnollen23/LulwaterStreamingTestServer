@@ -6,6 +6,8 @@ import type { Construct } from 'constructs';
 import * as apigw from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cwActions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as events from 'aws-cdk-lib/aws-events';
@@ -22,7 +24,7 @@ import {
   DEGRADED_AT_GB_PER_DAY,
   OFF_AT_GB_PER_DAY,
   SIGNING_KEY_PARAM,
-  SPEND_ALERT_EMAILS,
+  ALERT_EMAILS,
   STREAM_SIGNING_MODE,
   STREAMING_MODE_OVERRIDE_PARAM,
   STREAMING_MODE_PARAM,
@@ -212,7 +214,7 @@ export class StreamingStack extends Stack {
     // See backend/spend-guard/handler.ts. (A plain CloudWatch alarm can't do this here: CloudFront metrics live
     // only in us-east-1, alarms can't count "since midnight Eastern", and they can't write the switch.)
     const spendAlerts = new sns.Topic(this, 'SpendAlerts', { displayName: 'Lullwater spend switch' });
-    for (const email of SPEND_ALERT_EMAILS) spendAlerts.addSubscription(new subs.EmailSubscription(email));
+    for (const email of ALERT_EMAILS) spendAlerts.addSubscription(new subs.EmailSubscription(email));
 
     const spendGuardFn = new NodejsFunction(this, 'SpendGuardFn', {
       ...fnDefaults,
@@ -247,6 +249,39 @@ export class StreamingStack extends Stack {
       schedule: events.Schedule.rate(Duration.minutes(5)),
       targets: [new targets.LambdaFunction(spendGuardFn, { retryAttempts: 0 })],
     });
+
+    // Watch the watcher: mode emails only go out on a CHANGE, so a broken spend guard would otherwise be silent
+    // (and free streaming would have no cost cap). Both alarms email the same list, and email again once fixed.
+    const alertAction = new cwActions.SnsAction(spendAlerts);
+    const guardAlarms = [
+      new cloudwatch.Alarm(this, 'SpendGuardFailingAlarm', {
+        alarmName: 'Lullwater spend guard is failing',
+        alarmDescription:
+          'The spend guard errored in 3 of its last 4 runs, so the spend switch is stuck in its current mode. ' +
+          'Check the SpendGuardFn logs in CloudWatch (us-east-2). To be safe meanwhile: npm run streaming-mode -- degraded',
+        metric: spendGuardFn.metricErrors({ period: Duration.minutes(5), statistic: cloudwatch.Stats.SUM }),
+        threshold: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        evaluationPeriods: 4,
+        datapointsToAlarm: 3,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING, // no runs is the other alarm's job
+      }),
+      new cloudwatch.Alarm(this, 'SpendGuardStoppedAlarm', {
+        alarmName: 'Lullwater spend guard stopped running',
+        alarmDescription:
+          'The spend guard has not run for 15 minutes (it should run every 5), so the spend switch is stuck. ' +
+          'Check the SpendGuardSchedule rule in EventBridge (us-east-2). To be safe meanwhile: npm run streaming-mode -- degraded',
+        metric: spendGuardFn.metricInvocations({ period: Duration.minutes(15), statistic: cloudwatch.Stats.SUM }),
+        threshold: 1,
+        comparisonOperator: cloudwatch.ComparisonOperator.LESS_THAN_THRESHOLD,
+        evaluationPeriods: 1,
+        treatMissingData: cloudwatch.TreatMissingData.BREACHING, // no data at all = it isn't running
+      }),
+    ];
+    for (const alarm of guardAlarms) {
+      alarm.addAlarmAction(alertAction);
+      alarm.addOkAction(alertAction);
+    }
 
     new s3deploy.BucketDeployment(this, 'DeploySite', {
       sources: [s3deploy.Source.asset(path.join(root, 'frontend/dist'))],

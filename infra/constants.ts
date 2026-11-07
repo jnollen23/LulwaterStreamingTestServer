@@ -29,6 +29,9 @@ export const DEGRADED_AT_GB_PER_DAY = 25;
 /** Today's traffic at which free streaming pauses until midnight Eastern (~$6/day). */
 export const OFF_AT_GB_PER_DAY = 75;
 
-/** Who gets an email when the spend switch changes mode. AWS sends each address a one-time
- *  "Confirm subscription" email after the first deploy; nothing arrives until that link is clicked. */
-export const SPEND_ALERT_EMAILS = ['heavensnarrative@gmail.com'];
+/** Where EVERY email the system sends goes: spend-switch mode changes, spend-guard failure alarms, and any alert
+ *  added later (e.g. the AWS bill alert, issue #20). Use this list rather than adding new addresses elsewhere.
+ *  AWS sends each address a one-time "Confirm subscription" email after the deploy that adds it; nothing arrives
+ *  until that link is clicked.
+ *  TODO(client): test address for now (2026-11-06) — switch to the real address(es) before going live. */
+export const ALERT_EMAILS = ['jacob.nollen@hotmail.com'];

@@ -99,7 +99,7 @@ One phone-shaped layout everywhere; on desktop it's a centered 480px column.
 
 To change a song's tags, art or audio, upload the new FLAC to `raw/` with **exactly the same filename**. Once the new copy has finished transcoding it replaces the old one: likes carry over, and the old catalog entry, stream files and art are deleted. If the new upload fails, the old song stays up. A different filename counts as a new song, so the old one stays too.
 
-Open reminders in the code are marked `TODO(donate)`, `TODO(shop)`, `TODO(about)` and `TODO(genres)`.
+Open reminders in the code are marked `TODO(<topic>)` (find them with `git grep -n TODO`). Each one has a GitHub issue: https://github.com/jnollen23/LulwaterStreamingTestServer/issues
 
 To check the layout without the deployed backend (sample songs, playback won't work):
 
@@ -142,8 +142,13 @@ the mode for **free** listeners — subscribers are never throttled:
 | from `OFF_AT_GB_PER_DAY` | off | "Free listening is paused for today" |
 
 It goes back to normal by itself after midnight Eastern. Thresholds live in `infra/constants.ts` (placeholders until
-the client confirms). Mode changes are logged as `SPEND SWITCH` in the SpendGuardFn CloudWatch logs and emailed to `SPEND_ALERT_EMAILS`
+the client confirms). Mode changes are logged as `SPEND SWITCH` in the SpendGuardFn CloudWatch logs and emailed to `ALERT_EMAILS`
 (`infra/constants.ts`). After the first deploy, click the "Confirm subscription" link AWS emails to each address.
+
+The same addresses are emailed if the spend guard itself breaks: errors in 3 of its last 4 runs, or no run for
+15 minutes. Either way the switch is stuck in its current mode until it's fixed; `npm run streaming-mode -- degraded`
+is a safe stopgap. A second "OK" email arrives once it recovers. Expect one or two of these right after a deploy
+while the alarms get their first data.
 
 Force a mode by hand (stays until you set `auto` again; takes effect within about 6 minutes):
 
