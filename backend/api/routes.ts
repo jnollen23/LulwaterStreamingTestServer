@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from 'aws-lambda';
 import type { User } from '../shared/auth.js';
-import { addLike, getTrack, listReadyTracks, toPublic } from '../shared/catalog.js';
+import { addLike, getTrack, listReadyTracks, toListItem, toPublic } from '../shared/catalog.js';
 import { recordListen, startListen, type Tier } from '../shared/plays.js';
 import { signedStreamCookies } from '../shared/signing.js';
 import { getStreamingMode, type StreamingMode } from '../shared/streamingMode.js';
@@ -69,7 +69,7 @@ export const routes: Route[] = [
     requireAuth: false,
     handler: async () => {
       const tracks = (await listReadyTracks())
-        .map(toPublic)
+        .map(toListItem)
         .sort((a, b) =>
           (a.artist ?? '').localeCompare(b.artist ?? '') ||
           (a.album ?? '').localeCompare(b.album ?? '') ||

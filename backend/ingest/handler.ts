@@ -56,6 +56,9 @@ export async function handler(event: S3Event | BackfillEvent): Promise<unknown> 
       year: tags.year,
       genres: tags.genres,
       producer: tags.producer,
+      lyrics: tags.lyrics,
+      copyright: tags.copyright,
+      aiInfo: tags.aiInfo,
       artPath,
       thumbPath,
       status: 'PROCESSING',
@@ -163,14 +166,31 @@ interface Tags {
   year?: number;
   genres?: string[];
   producer?: string;
+  lyrics?: string;
+  copyright?: string;
+  aiInfo?: string;
   picture?: { format: string; data: Uint8Array };
+}
+
+/** A DynamoDB row tops out at 400 KB; no real lyrics come close, but a pasted-in mistake shouldn't fail the upload. */
+const MAX_TEXT = 50_000;
+
+function text(value: string | undefined): string | undefined {
+  const t = value?.replace(/\r\n/g, '\n').trim();
+  return t ? t.slice(0, MAX_TEXT) : undefined;
+}
+
+/** A custom Vorbis comment (e.g. AI_INFO), which music-metadata leaves out of `common`. */
+function vorbisTag(native: Record<string, { id: string; value: unknown }[]>, id: string): string | undefined {
+  const v = native.vorbis?.find((t) => t.id.toUpperCase() === id)?.value;
+  return typeof v === 'string' ? v : undefined;
 }
 
 async function readTags(bucket: string, key: string): Promise<Tags> {
   const obj = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
   const body = obj.Body as Readable;
   try {
-    const { common } = await parseStream(body, { mimeType: obj.ContentType, size: obj.ContentLength });
+    const { common, native } = await parseStream(body, { mimeType: obj.ContentType, size: obj.ContentLength });
     return {
       title: common.title,
       artist: common.artist,
@@ -179,6 +199,9 @@ async function readTags(bucket: string, key: string): Promise<Tags> {
       year: common.year,
       genres: splitGenres(common.genre),
       producer: common.producer?.[0]?.trim() || undefined,
+      lyrics: text(common.lyrics?.[0]?.text),
+      copyright: text(common.copyright),
+      aiInfo: text(vorbisTag(native, 'AI_INFO')),
       picture: common.picture?.[0],
     };
   } catch (err) {

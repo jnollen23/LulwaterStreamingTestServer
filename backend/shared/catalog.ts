@@ -26,6 +26,10 @@ export interface Track {
    * royalty report until it's filled in (re-upload with the tag, or edit the row in the TracksTable).
    */
   producer?: string;
+  /** For the song's About popup. From the FLAC LYRICS, COPYRIGHT and AI_INFO tags (scripts/make-flac.py writes them). */
+  lyrics?: string;
+  copyright?: string;
+  aiInfo?: string;
   /** Running like count. No user is recorded, so the site allows one like per song per page visit. */
   likes?: number;
   status: TrackStatus;
@@ -38,6 +42,14 @@ export interface Track {
 export type PublicTrack = Omit<Track, 'status' | 'sourceKey' | 'error'>;
 
 export function toPublic({ status, sourceKey, error, ...rest }: Track): PublicTrack {
+  return rest;
+}
+
+/** For the full song list: also leaves out the About-popup text, so lyrics don't make every page load bigger. */
+export type ListTrack = Omit<PublicTrack, 'lyrics' | 'copyright' | 'aiInfo'>;
+
+export function toListItem(track: Track): ListTrack {
+  const { lyrics, copyright, aiInfo, ...rest } = toPublic(track);
   return rest;
 }
 

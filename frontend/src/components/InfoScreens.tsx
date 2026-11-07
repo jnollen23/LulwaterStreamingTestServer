@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Track } from '../api';
+import { getTrackDetails, type Track } from '../api';
 import { DONATE_URL } from '../config';
 import { BagIcon, CloseIcon, HeartIcon, LayersIcon, MusicIcon } from './Icons';
 
@@ -76,8 +76,24 @@ export function AboutScreen() {
 }
 
 /** About while a song is playing: that song's lyrics, copyright and AI information in one scrolling popup. */
-export function SongInfoDialog({ track, onClose }: { track: Track; onClose: () => void }) {
-  const missing = <span className="faint">Not added yet.</span>;
+export function SongInfoDialog({ track, getToken, onClose }: {
+  track: Track; getToken: () => Promise<string | null>; onClose: () => void;
+}) {
+  // The song list doesn't carry this text, so fetch the full song when the popup opens.
+  const [details, setDetails] = useState<Track | 'loading' | 'failed'>('loading');
+  useEffect(() => {
+    let live = true;
+    setDetails('loading');
+    getTrackDetails(track.trackId, getToken)
+      .then((t) => { if (live) setDetails(t); })
+      .catch((err) => { console.warn('Could not load song details', err); if (live) setDetails('failed'); });
+    return () => { live = false; };
+  }, [track.trackId, getToken]);
+
+  const info = typeof details === 'object' ? details : track;
+  const missing = <span className="faint">
+    {details === 'loading' ? 'Loading…' : details === 'failed' ? 'Could not load. Please try again.' : 'Not added yet.'}
+  </span>;
   return (
     <div className="overlay" role="dialog" aria-modal="true" aria-label="About this song" onClick={onClose}>
       <div className="dialog song-info" onClick={(e) => e.stopPropagation()}>
@@ -90,9 +106,9 @@ export function SongInfoDialog({ track, onClose }: { track: Track; onClose: () =
           {track.artist && <div className="np-artist">{track.artist}</div>}
         </div>
         <div className="song-info-scroll">
-          <section><h3>Lyrics</h3>{track.lyrics ? <p className="lyrics">{track.lyrics}</p> : missing}</section>
-          <section><h3>Copyright</h3>{track.copyright ? <p>{track.copyright}</p> : missing}</section>
-          <section><h3>AI information</h3>{track.aiInfo ? <p>{track.aiInfo}</p> : missing}</section>
+          <section><h3>Lyrics</h3>{info.lyrics ? <p className="lyrics">{info.lyrics}</p> : missing}</section>
+          <section><h3>Copyright</h3>{info.copyright ? <p>{info.copyright}</p> : missing}</section>
+          <section><h3>AI information</h3>{info.aiInfo ? <p>{info.aiInfo}</p> : missing}</section>
         </div>
         <button className="primary-btn" onClick={onClose}>Close</button>
       </div>

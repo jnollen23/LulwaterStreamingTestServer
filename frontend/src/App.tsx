@@ -279,7 +279,7 @@ export function App() {
         />
       )}
 
-      {songInfoOpen && current && <SongInfoDialog track={current} onClose={() => setSongInfoOpen(false)} />}
+      {songInfoOpen && current && <SongInfoDialog track={current} getToken={getToken} onClose={() => setSongInfoOpen(false)} />}
 
       {!termsAccepted && <TermsDialog onAccept={() => setTermsAccepted(true)} />}
     </div>

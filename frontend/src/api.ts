@@ -11,8 +11,8 @@ export interface Track {
   /** Small version of artPath for song lists; older songs may not have one until the backfill runs. */
   thumbPath?: string;
   likes?: number;
-  // TODO(song-info): the catalog doesn't store these yet (FLAC tags don't carry them reliably), so the
-  // About popup on the now-playing screen shows "Not added yet" until there's a way to enter them per song.
+  // For the song's About popup, from the FLAC LYRICS / COPYRIGHT / AI_INFO tags (scripts/make-flac.py).
+  // The song list leaves these out to stay small; fetch them with getTrackDetails.
   lyrics?: string;
   copyright?: string;
   aiInfo?: string;
@@ -49,6 +49,16 @@ async function request<T>(path: string, getToken: TokenGetter, init: RequestInit
 export async function listTracks(getToken: TokenGetter): Promise<Track[]> {
   if (import.meta.env.DEV && import.meta.env.VITE_MOCK === '1') return (await import('./mockTracks')).MOCK_TRACKS;
   return (await request<{ tracks: Track[] }>('/api/tracks', getToken)).tracks;
+}
+
+/** One song with everything, including the lyrics / copyright / AI info that the song list leaves out. */
+export async function getTrackDetails(trackId: string, getToken: TokenGetter): Promise<Track> {
+  if (import.meta.env.DEV && import.meta.env.VITE_MOCK === '1') {
+    const track = (await import('./mockTracks')).MOCK_TRACKS.find((t) => t.trackId === trackId);
+    if (!track) throw new ApiError('Mock track not found', 404);
+    return track;
+  }
+  return (await request<{ track: Track }>(`/api/tracks/${encodeURIComponent(trackId)}`, getToken)).track;
 }
 
 /** Returns the HLS playlist URL for a track (its links are pre-signed; in cookie mode the API also sets stream cookies). */

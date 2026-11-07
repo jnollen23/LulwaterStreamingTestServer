@@ -80,7 +80,7 @@ npm run make-flac -- "C:\Music\My Song"           # makes "Artist - Title.flac" 
 npm run make-flac -- "C:\Music" --out "%USERPROFILE%\Downloads\lullwater-flac"   # every song folder inside
 ```
 
-Title, Artist and Genre are required. Several genres/artists/producers are separated with `;`. Besides the tags above it writes `PRODUCER` (used by the royalty report), `LYRICS`, `COPYRIGHT` and `AI_INFO` (for the song's About popup — **not read by the ingest Lambda yet**), and any other `Key: value` line as its own tag.
+Title, Artist and Genre are required. Several genres/artists/producers are separated with `;`. Besides the tags above it writes `PRODUCER` (used by the royalty report), `LYRICS`, `COPYRIGHT` and `AI_INFO` (shown in the song's About popup; songs uploaded before this was added need re-uploading to pick them up), and any other `Key: value` line as its own tag.
 
 **If a track never shows up:** open DynamoDB, then the `TracksTableName` table, and find the item. `status` will be `ERROR` with an `error` message. The Lambda logs are in CloudWatch (`/aws/lambda/StreamingWebsite-IngestFn…`); ffmpeg's last lines of output are included in the `error` message.
 

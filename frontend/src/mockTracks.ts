@@ -11,4 +11,10 @@ export const MOCK_TRACKS: Track[] = Array.from({ length: 40 }, (_, i) => ({
   genres: [GENRES[i % 4], GENRES[(i * 3 + 4) % GENRES.length]],
   durationMs: (150 + ((i * 37) % 140)) * 1000,
   likes: (i * 13) % 5 === 0 ? 0 : (i * 13) % 60,
+  // Song 1 has About-popup text so that popup can be checked; the rest show "Not added yet."
+  ...(i === 0 ? {
+    lyrics: 'First verse, line one\nFirst verse, line two\n\nChorus line one\nChorus line two',
+    copyright: '© 2026 Lullwater Studios',
+    aiInfo: 'No AI was used to write or perform this song.',
+  } : {}),
 }));
