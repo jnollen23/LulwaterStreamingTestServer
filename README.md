@@ -168,7 +168,9 @@ the mode for **free** listeners — subscribers are never throttled:
 
 It goes back to normal by itself after midnight Eastern. Thresholds live in `infra/constants.ts` (placeholders until
 the client confirms). Mode changes are logged as `SPEND SWITCH` in the SpendGuardFn CloudWatch logs and emailed to `ALERT_EMAILS`
-(`infra/constants.ts`). After the first deploy, click the "Confirm subscription" link AWS emails to each address.
+(`infra/constants.ts`). After the first deploy, click the "Confirm subscription" link AWS emails to each address **within 3 days**:
+AWS deletes unconfirmed subscriptions, and a redeploy will not recreate them. If one expires, re-subscribe with
+`aws sns subscribe --topic-arn <SpendAlerts topic ARN> --protocol email --notification-endpoint <address> --region us-east-2`.
 
 The same addresses are emailed if the spend guard itself breaks: errors in 3 of its last 4 runs, or no run for
 15 minutes. Either way the switch is stuck in its current mode until it's fixed; `npm run streaming-mode -- degraded`
