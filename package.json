@@ -5,7 +5,9 @@
   "scripts": {
     "setup-keys": "tsx scripts/setup-keys.ts",
     "build:web": "npm --prefix frontend run build",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p frontend",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "synth": "npm run build:web && cdk synth",
     "deploy": "npm run build:web && cdk deploy",
     "destroy": "cdk destroy",
@@ -29,8 +31,10 @@
     "@types/aws-lambda": "^8.10.164",
     "@types/node": "^26.6.4",
     "aws-cdk": "^2.1144.0",
+    "aws-sdk-client-mock": "^4.1.0",
     "esbuild": "^0.28.2",
     "tsx": "^4.23.15",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.1"
   }
 }

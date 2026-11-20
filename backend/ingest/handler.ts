@@ -175,7 +175,7 @@ interface Tags {
 /** A DynamoDB row tops out at 400 KB; no real lyrics come close, but a pasted-in mistake shouldn't fail the upload. */
 const MAX_TEXT = 50_000;
 
-function text(value: string | undefined): string | undefined {
+export function text(value: string | undefined): string | undefined {
   const t = value?.replace(/\r\n/g, '\n').trim();
   return t ? t.slice(0, MAX_TEXT) : undefined;
 }
@@ -213,12 +213,12 @@ async function readTags(bucket: string, key: string): Promise<Tags> {
 }
 
 /** "raw/Some Artist - Some Song.flac" -> "Some Artist - Some Song" */
-function fileTitle(key: string): string {
+export function fileTitle(key: string): string {
   return key.split('/').pop()!.replace(/\.[^.]+$/, '');
 }
 
 /** GENRE tags often pack several values into one ("Worship; Gospel"), so split and de-duplicate them. */
-function splitGenres(raw: string[] | undefined): string[] | undefined {
+export function splitGenres(raw: string[] | undefined): string[] | undefined {
   const genres = [...new Set((raw ?? []).flatMap((g) => g.split(/[;,/]/)).map((g) => g.trim()).filter(Boolean))];
   return genres.length ? genres : undefined;
 }

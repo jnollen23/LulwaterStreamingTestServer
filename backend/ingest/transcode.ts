@@ -91,13 +91,13 @@ export async function makeThumbnail(image: Uint8Array, trackId: string): Promise
   }
 }
 
-function rank(name: string): number {
+export function rank(name: string): number {
   if (name === 'index.m3u8') return 2;
   return name.endsWith('.m3u8') ? 1 : 0;
 }
 
 /** "Duration: 00:03:21.45," from ffmpeg's input summary -> 201450 */
-function parseDurationMs(stderr: string): number | undefined {
+export function parseDurationMs(stderr: string): number | undefined {
   const m = /Duration: (\d+):(\d{2}):(\d{2}(?:\.\d+)?)/.exec(stderr);
   if (!m) return undefined;
   return Math.round(((+m[1] * 60 + +m[2]) * 60 + +m[3]) * 1000);

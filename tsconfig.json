@@ -10,5 +10,6 @@
     "noEmit": true,
     "types": ["node", "aws-lambda"]
   },
-  "include": ["infra", "backend", "scripts"]
+  "include": ["infra", "backend", "scripts", "test", "vitest.config.ts"],
+  "exclude": ["test/frontend"]
 }

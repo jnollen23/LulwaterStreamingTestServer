@@ -127,6 +127,19 @@ $env:SITE_URL = "https://xxxx.cloudfront.net"; npm --prefix frontend run dev
 
 This proxies `/api`, `/stream` and `/art` to the deployed site.
 
+## Tests
+
+```powershell
+npm test            # run once
+npm run test:watch  # re-run on every save
+```
+
+Automated tests for the logic (Vitest), in `test/`. AWS is mocked, so they run offline in about a second, cost
+nothing and touch nothing deployed. They cover the API routes and their checks, the play log (30-second play rule, caps
+on faked reports), the spend switch (thresholds, overrides, alert emails, Eastern midnight across daylight saving),
+stream signing, playlist rewriting, ingest tag helpers, the royalty-report math and the genre filters. Screens and the
+audio player aren't covered; check those by hand. Run `npm test` and `npm run typecheck` before each deploy.
+
 ## Not done yet
 
 - Upload page on the website (planned behind login)
